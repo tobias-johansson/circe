@@ -63,7 +63,7 @@ final object DecodingFailure {
       case (str, Op(op))         => s"{${Show[CursorOp].show(op)}}$str"
     }
 
-    s"${failure.getMessage}, at $selectionsStr"
+    s"${failure.message}, at $selectionsStr"
   }
 
 }
