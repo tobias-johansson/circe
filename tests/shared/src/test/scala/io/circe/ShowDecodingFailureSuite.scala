@@ -23,13 +23,13 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
 
   val show = Show[DecodingFailure].show _
 
-  test("simple example") {
+  test("small example") {
     val ops = List(MoveRight, MoveRight, DownArray, DownField("bar"), DownField("foo")) map HistoryOp.ok
 
-    assert(show(DecodingFailure("failure", ops)) === "failure, at .foo.bar[2]")
+    assert(show(DecodingFailure("failure", ops)).startsWith("DecodingFailure at .foo.bar[2]:"))
   }
 
-  test("advanced example") {
+  test("larger example") {
     val ops = List(
       DeleteGoFirst,
       MoveLeft, LeftN(2), RightN(5),
@@ -37,7 +37,7 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
       MoveUp, MoveRight, MoveRight,
       DownArray, DownField("foo")) map HistoryOp.ok
 
-    assert(show(DecodingFailure("failure", ops)) === "failure, at .foo.bar[0][2]{|<-!}")
+    assert(show(DecodingFailure("failure", ops)).startsWith("DecodingFailure at .foo.bar[0][2]{|<-!}:"))
   }
 
   test("field selection") {
@@ -48,7 +48,7 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
         case (_, s)            => s
       }
 
-      show(DecodingFailure("failure", ops)) === s"failure, at $selection"
+      show(DecodingFailure("failure", ops)).startsWith(s"DecodingFailure at $selection:")
     })
   }
 
@@ -63,7 +63,7 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
         case (i, _)         => i
       }
 
-      show(DecodingFailure("failure", ops)) === s"failure, at [$index]"
+      show(DecodingFailure("failure", ops)).startsWith(s"DecodingFailure at [$index]:")
     })
   }
 }

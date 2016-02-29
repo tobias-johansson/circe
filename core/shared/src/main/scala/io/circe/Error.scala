@@ -34,15 +34,15 @@ final object DecodingFailure {
     * Creates compact, human readable string representations for DecodingFailure
     * Cursor history is represented as JS style selections, i.e. ".foo.bar[3]"
     */
-  implicit val showDecodingFailure: Show[DecodingFailure] = Show.show { failure =>
+  implicit final val showDecodingFailure: Show[DecodingFailure] = Show.show { failure =>
 
-    /** Represents JS style selections into JSON */
+    /** Represents JS style selections into JSON structure */
     sealed trait Selection
     case class SelectField(field: String) extends Selection
     case class SelectIndex(index: Int) extends Selection
     case class Op(op: CursorOp) extends Selection
 
-    // Fold into sequence of selections (to reduce array ops into single selections)
+    // Fold into sequence of selections (to reduce array ops etc. into single selections)
     val selections = failure.history.foldRight(List[Selection]()) { (historyOp, sels) =>
       (historyOp.op, sels) match {
         case (Some(DownField(k)), _)                   => SelectField(k) :: sels
@@ -63,7 +63,8 @@ final object DecodingFailure {
       case (str, Op(op))         => s"{${Show[CursorOp].show(op)}}$str"
     }
 
-    s"${failure.message}, at $selectionsStr"
+    val name = classOf[DecodingFailure].getSimpleName
+    s"$name at $selectionsStr: ${failure.message}"
   }
 
 }
