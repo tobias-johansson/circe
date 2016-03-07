@@ -19,17 +19,21 @@ trait GenCursorOps {
     Gen.listOf(Gen.identifier map DownField)
 }
 
-class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
+class ShowErrorSuite extends CirceSuite with GenCursorOps {
 
-  val show = Show[DecodingFailure].show _
+  val show = Show[Error].show _
 
-  test("small example") {
-    val ops = List(MoveRight, MoveRight, DownArray, DownField("bar"), DownField("foo")) map HistoryOp.ok
-
-    assert(show(DecodingFailure("failure", ops)).startsWith("DecodingFailure at .foo.bar[2]:"))
+  test("ParsingFailure example") {
+    assert(show(ParsingFailure("the message", new Exception())) === "ParsingFailure: the message")
   }
 
-  test("larger example") {
+  test("DecodingFailure example") {
+    val ops = List(MoveRight, MoveRight, DownArray, DownField("bar"), DownField("foo")) map HistoryOp.ok
+
+    assert(show(DecodingFailure("the message", ops)) === "DecodingFailure at .foo.bar[2]: the message")
+  }
+
+  test("DecodingFailure larger example") {
     val ops = List(
       DeleteGoFirst,
       MoveLeft, LeftN(2), RightN(5),
@@ -37,10 +41,10 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
       MoveUp, MoveRight, MoveRight,
       DownArray, DownField("foo")) map HistoryOp.ok
 
-    assert(show(DecodingFailure("failure", ops)).startsWith("DecodingFailure at .foo.bar[0][2]{|<-!}:"))
+    assert(show(DecodingFailure("the message", ops)) === "DecodingFailure at .foo.bar[0][2]{|<-!}: the message")
   }
 
-  test("field selection") {
+  test("DecodingFailure field selection") {
     check(forAll(downFields) { moves =>
       val ops = moves map HistoryOp.ok
       val selection = moves.foldRight("") {
@@ -48,11 +52,11 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
         case (_, s)            => s
       }
 
-      show(DecodingFailure("failure", ops)).startsWith(s"DecodingFailure at $selection:")
+      show(DecodingFailure("the message", ops)) === s"DecodingFailure at $selection: the message"
     })
   }
 
-  test("array indexing") {
+  test("DecodingFailure array indexing") {
     check(forAll(arrayMoves) { moves =>
       val ops = (moves ++ List(DownArray)) map HistoryOp.ok
       val index = moves.foldLeft(0) {
@@ -63,7 +67,7 @@ class ShowDecodingFailureSuite extends CirceSuite with GenCursorOps {
         case (i, _)         => i
       }
 
-      show(DecodingFailure("failure", ops)).startsWith(s"DecodingFailure at [$index]:")
+      show(DecodingFailure("the message", ops)) === s"DecodingFailure at [$index]: the message"
     })
   }
 }

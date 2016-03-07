@@ -22,6 +22,11 @@ final object ParsingFailure {
   implicit final val eqParsingFailure: Eq[ParsingFailure] = Eq.instance {
     case (ParsingFailure(m1, t1), ParsingFailure(m2, t2)) => m1 == m2 && t1 == t2
   }
+
+  implicit final val showParsingFailure: Show[ParsingFailure] = Show.show { failure =>
+    val name = classOf[ParsingFailure].getSimpleName
+    s"$name: ${failure.message}"
+  }
 }
 
 final object DecodingFailure {
@@ -76,4 +81,10 @@ final object Error {
       DecodingFailure.eqDecodingFailure.eqv(df1, df2)
     case (_, _) => false
   }
+
+  implicit final val showError: Show[Error] = Show.show {
+    case pf: ParsingFailure  => ParsingFailure.showParsingFailure.show(pf)
+    case df: DecodingFailure => DecodingFailure.showDecodingFailure.show(df)
+  }
+
 }
